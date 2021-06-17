@@ -1,0 +1,1 @@
+copy from https://github.com/python/cpython/blob/main/Tools/i18n/pygettext.py
