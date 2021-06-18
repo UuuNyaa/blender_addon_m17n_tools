@@ -44,7 +44,7 @@ def main(args: Union[List[str], None] = None):
     subpersers = parser.add_subparsers(dest='subcommand')
     parser_generate = subpersers.add_parser('generate', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser_generate.add_argument('-o', '--output_python_file_path', type=str, help='path of the output file')
-    parser_generate.add_argument('-k', '--keywords', type=str, default='_', help='space-separated list of keywords to look for in addition to the defaults (may be repeated multiple times)')
+    parser_generate.add_argument('-k', '--keywords', type=str, default='_ iface_', help='space-separated list of keywords to look for in addition to the defaults (may be repeated multiple times)')
     parser_generate.add_argument('--default_locale', type=str, default='en_US', help='default locale')
     parser_generate.add_argument('--default_context', type=str, default='*', help='default context')
     parser_generate.add_argument('--no_output_utilities', const=True, default=False, action='store_const', help='do not output utility functions')
@@ -53,6 +53,7 @@ def main(args: Union[List[str], None] = None):
     parser_analyze = subpersers.add_parser('analyze', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser_analyze.add_argument('input_python_file_paths', type=str, nargs='+', help='input python file paths (allow files as well as directories)')
     parser_analyze.add_argument('-k', '--keywords', type=str, default='_', help='space-separated list of keywords to look for in addition to the defaults (may be repeated multiple times)')
+    parser_analyze.add_argument('--distance_ratio_threshold', type=float, default='0.5', help='threshold for the ratio of distance / len(msgid)')
 
     options = parser.parse_args(sys.argv[1:] if args is None else args)
 
@@ -69,6 +70,7 @@ def main(args: Union[List[str], None] = None):
         analyze(
             options.input_python_file_paths,
             options.keywords,
+            options.distance_ratio_threshold,
         )
     else:
         parser.print_help()
@@ -90,7 +92,7 @@ def generate(input_python_file_paths: List[str], output_python_file_path: str, k
             output_file.write('\n')
 
 
-def analyze(input_python_file_paths: List[str], keywords: str):
+def analyze(input_python_file_paths: List[str], keywords: str, distance_ratio_threshold: float):
     print('parse files...', end='', file=sys.stderr)
     msgid_poentry = parse_potext(get_potext(input_python_file_paths, keywords))
     print('done', file=sys.stderr)
@@ -100,30 +102,39 @@ def analyze(input_python_file_paths: List[str], keywords: str):
     calculate_count = int((msgid_count * (msgid_count-1))/2)
     print(f'Number of distinct messages: {msgid_count}', file=sys.stderr)
 
+    def edit_distance(s1: str, s2: str) -> int:
+        # pylint: disable=invalid-name
+
+        n = len(s1)
+        m = len(s2)
+        dp = [[0 for i in range(m + 1)] for j in range(n + 1)]
+        return min_distance(s1, s2, n, m, dp)
+
     count = 0
-    # python3 ../blender_addon_m17n_tools/blender_addon_m17n_tools.py analyze   13.67s user 0.02s system 89% cpu 15.275 total
     edit_distances: Dict[Tuple[int, int], int] = {}
+
+    print('calculate edit distances...', end='', file=sys.stderr)
     for left_index in range(1, msgid_count):
         for right_index in range(left_index):
             edit_distances[(left_index, right_index)] = edit_distance(msgids[left_index], msgids[right_index])
-            count += 1
+        count += left_index
         print(f'\rcalculate edit distances... {count}/{calculate_count}', end='', file=sys.stderr)
     print(' done', file=sys.stderr)
 
     for (left_index, right_index), distance in sorted(edit_distances.items(), key=lambda e: e[1]):
-        if distance > 15:
-            break
         left = msgids[left_index]
         right = msgids[right_index]
-        print(f'distance: {distance}')
-        print('\t')
+
+        if distance / len(left) > distance_ratio_threshold or distance / len(right) > distance_ratio_threshold:
+            continue
+
+        print(f'===== edit distance: {distance}')
         print(msgid_poentry[left].comment)
         print(left)
-        print('\t')
-        print(msgid_poentry[right].comment)
-        print(right)
         print('-----')
-
+        print(right)
+        print(msgid_poentry[right].comment)
+        print()
 
 
 def min_distance(s1: str, s2: str, n: int, m: int, dp: List[List[int]]) -> int:
@@ -140,45 +151,37 @@ def min_distance(s1: str, s2: str, n: int, m: int, dp: List[List[int]]) -> int:
 
     # To check if the recursive tree
     # for given n & m has already been executed
-    if dp[n][m] != -1:
+    if dp[n][m]:
         return dp[n][m]
 
     # If characters are equal, execute
     # recursive function for n-1, m-1
     if s1[n - 1] == s2[m - 1]:
-        if dp[n - 1][m - 1] == -1:
-            dp[n][m] = min_distance(s1, s2, n - 1, m - 1, dp)
+        if dp[n - 1][m - 1]:
+            dp[n][m] = dp[n - 1][m - 1]
             return dp[n][m]
-        dp[n][m] = dp[n - 1][m - 1]
+        dp[n][m] = min_distance(s1, s2, n - 1, m - 1, dp)
         return dp[n][m]
 
     # If characters are nt equal, we need to
     # find the minimum cost out of all 3 operations.
-    if dp[n - 1][m] != -1:
+    if dp[n - 1][m]:
         m1 = dp[n - 1][m]
     else:
         m1 = min_distance(s1, s2, n - 1, m, dp)
 
-    if dp[n][m - 1] != -1:
+    if dp[n][m - 1]:
         m2 = dp[n][m - 1]
     else:
         m2 = min_distance(s1, s2, n, m - 1, dp)
 
-    if dp[n - 1][m - 1] != -1:
+    if dp[n - 1][m - 1]:
         m3 = dp[n - 1][m - 1]
     else:
         m3 = min_distance(s1, s2, n - 1, m - 1, dp)
 
     dp[n][m] = 1 + min(m1, min(m2, m3))
     return dp[n][m]
-
-def edit_distance(s1: str, s2: str) -> int:
-    # pylint: disable=invalid-name
-
-    n = len(s1)
-    m = len(s2)
-    dp = [[-1 for i in range(m + 1)] for j in range(n + 1)]
-    return min_distance(s1, s2, n, m, dp)
 
 
 def append_translation_dict(output: List[str], msgid_poentry: Dict[str, PoEntry], locale_msgid_context_msgstr: Translations, context: str, default_locale: str):
@@ -222,6 +225,9 @@ def append_header(output: List[str], no_output_utilities: bool):
 
 def _(msgid: str) -> str:
   return msgid
+
+def iface_(msgid: str) -> str:
+  return bpy.app.translations.pgettext_iface(msgid)
 
 def register():
   bpy.app.translations.register(__name__, translation_dict)
