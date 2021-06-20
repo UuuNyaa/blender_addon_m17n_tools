@@ -5,6 +5,8 @@ blender_addon_m17n_tools is a script to assist in the multilingualization (m17n)
 ## Steps in Multilingualization
 1. wrap the string you want to make multilingual with `_(` and `)`
   ```diff
+  + from .m17n import _
+  +
     class AddSkinHairMesh(bpy.types.Operator):
       bl_idname = 'mmd_uuunyaa_tools.add_skin_hair_mesh'
   -   bl_label = 'Add Skin Hair Mesh'
