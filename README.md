@@ -54,7 +54,7 @@ blender_addon_m17n_tools is a script to assist in the multilingualization (m17n)
 ### Cautions
 1. f-string cannot be multilingualized. replace with [str.format](https://docs.python.org/3/library/stdtypes.html#str.format) and use `iface_(`.
 2. Multi-line strings are not supported. #1
-3. Operator display names context needs to specify the `Operator` context.
+3. Operator display names context needs to specify the `Operator`.
 
 ### How to update `m17n.py` when the code is changed
 Run `blender_addon_m17n_tools.py` with `-o` option again to update `m17n.py`.
