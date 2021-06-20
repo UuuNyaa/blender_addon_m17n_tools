@@ -59,6 +59,47 @@ blender_addon_m17n_tools is a script to assist in the multilingualization (m17n)
 ### How to update `m17n.py` when the code is changed
 Run `blender_addon_m17n_tools.py` with `-o` option again to update `m17n.py`.
 
+## Usage
+
+### `generate` subcommand
+```
+usage: blender_addon_m17n_tools.py generate [-h] [-o OUTPUT_PYTHON_FILE_PATH] [-k KEYWORDS] [--default_locale DEFAULT_LOCALE] [--default_context DEFAULT_CONTEXT] [--no_output_utilities] input_python_file_paths [input_python_file_paths ...]
+
+positional arguments:
+  input_python_file_paths
+                        input python file paths (allow files as well as directories)
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -o OUTPUT_PYTHON_FILE_PATH, --output_python_file_path OUTPUT_PYTHON_FILE_PATH
+                        path of the output file (default: None)
+  -k KEYWORDS, --keywords KEYWORDS
+                        space-separated list of keywords to look for in addition to the defaults (may be repeated multiple times) (default: _ iface_)
+  --default_locale DEFAULT_LOCALE
+                        default locale (default: en_US)
+  --default_context DEFAULT_CONTEXT
+                        default context (default: *)
+  --no_output_utilities
+                        do not output utility functions (default: False)
+```
+
+### `analyze` subcommand
+```
+usage: blender_addon_m17n_tools.py analyze [-h] [-k KEYWORDS] [--distance_ratio_threshold DISTANCE_RATIO_THRESHOLD] input_python_file_paths [input_python_file_paths ...]
+
+positional arguments:
+  input_python_file_paths
+                        input python file paths (allow files as well as directories)
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -k KEYWORDS, --keywords KEYWORDS
+                        space-separated list of keywords to look for in addition to the defaults (may be repeated multiple times) (default: _)
+  --distance_ratio_threshold DISTANCE_RATIO_THRESHOLD
+                        threshold for the ratio of distance / len(msgid) (default: 0.5)
+```
+
+
 ## See also
 - [Application Translations (bpy.app.translations) — Blender Python API](https://docs.blender.org/api/current/bpy.app.translations.html)
 - [A reference of specific code editing diffs for multilingualization](https://github.com/UuuNyaa/blender_mmd_uuunyaa_tools/pull/42/files)
