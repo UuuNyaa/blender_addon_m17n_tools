@@ -56,3 +56,7 @@ blender_addon_m17n_tools is a script to assist in the multilingualization (m17n)
 
 ### How to update `m17n.py` when the code is changed
 Run `blender_addon_m17n_tools.py` with `-o` option again to update `m17n.py`.
+
+## See also
+- [Application Translations (bpy.app.translations) — Blender Python API](https://docs.blender.org/api/current/bpy.app.translations.html)
+- [A reference of specific code editing diffs for multilingualization](https://github.com/UuuNyaa/blender_mmd_uuunyaa_tools/pull/42/files)
