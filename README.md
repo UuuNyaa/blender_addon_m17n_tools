@@ -17,7 +17,7 @@ blender_addon_m17n_tools is a script to assist in the multilingualization (m17n)
   ```
 2. run the `blender_addon_m17n_tools.py` and output `m17n.py` (any name is ok)
   ```bash
-  python3 BLENDER_ADDON_M17N_TOOLS_DIR/blender_addon_m17n_tools.py generate TARGET_ADDON_SOURCE_DIR -o TARGET_ADDON_SOURCE_DIR/path/to/m17n.py
+  python BLENDER_ADDON_M17N_TOOLS_DIR/blender_addon_m17n_tools.py generate TARGET_ADDON_SOURCE_DIR -o TARGET_ADDON_SOURCE_DIR/path/to/m17n.py
   ```
 3. call `register` function in `m17n.py` at add-on startup
   ```diff
